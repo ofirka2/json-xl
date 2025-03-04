@@ -36,7 +36,10 @@
                 const topologyEntries = topologyString.slice(1, -1).split(','); // Remove [ ]
                 topologyEntries.forEach(entry => {
                     if (entry.trim()) {
-                        const [serverName, provider, status, type, updated] = entry.split('-');
+                        // Split by ':' first to separate the updated indicator
+                        const [mainPart, updated] = entry.split(':');
+                        // Then split the main part by '-' for the other fields
+                        const [serverName, provider, status, type] = mainPart.split('-');
                         serverTopologyData.push({
                             'Server Name': serverName,
                             'Provider': provider,
