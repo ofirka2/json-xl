@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to Excel Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h2>JSON to Excel Converter</h2>
+    <textarea id="jsonInput" placeholder="Paste your JSON here..."></textarea>
+    <br>
+    <button onclick="convertToExcel()">Convert to Excel</button>
+
+    <script>
+        function convertToExcel() {
+            const jsonInput = document.getElementById('jsonInput').value;
+            try {
+                const jsonData = JSON.parse(jsonInput);
+
+                // Tab 1: Non-Array Values
+                const nonArrayData = [];
+                for (const [key, value] of Object.entries(jsonData)) {
+                    if (!Array.isArray(value) && typeof value !== 'object') {
+                        nonArrayData.push({ Key: key, Value: value });
+                    }
+                }
+
+                // Tab 2: Server Topology
+                const serverTopologyData = [];
+                const topologyString = jsonData.serversTopology || '[]';
+                const topologyEntries = topologyString.slice(1, -1).split(','); // Remove [ ]
+                topologyEntries.forEach(entry => {
+                    if (entry.trim()) {
+                        const [serverName, provider, status, type, updated] = entry.split('-');
+                        serverTopologyData.push({
+                            'Server Name': serverName,
+                            'Provider': provider,
+                            'Status': status,
+                            'Type': type,
+                            'Updated?': updated === '1' ? 'Yes' : 'No'
+                        });
+                    }
+                });
+
+                // Create Workbook
+                const wb = XLSX.utils.book_new();
+
+                // Sheet 1: Non-Array Values
+                const ws1 = XLSX.utils.json_to_sheet(nonArrayData);
+                XLSX.utils.book_append_sheet(wb, ws1, 'Non-Array Values');
+
+                // Sheet 2: Server Topology
+                const ws2 = XLSX.utils.json_to_sheet(serverTopologyData);
+                XLSX.utils.book_append_sheet(wb, ws2, 'Server Topology');
+
+                // Generate and Download Excel File
+                XLSX.writeFile(wb, 'converted_data.xlsx');
+            } catch (error) {
+                alert('Invalid JSON input: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
